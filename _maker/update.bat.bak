@@ -1,0 +1,2 @@
+xcopy "D:\Projects\Project.SIM\SIMADATABASE" %cd%\Content /Y /C /R /S /I /Q /U
+pause
