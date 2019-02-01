@@ -46,7 +46,7 @@ GOTO :EOF
 	REM �������� �� ������...
 	IF !ERRORLEVEL! EQU 0 (
 		echo %time%: [%Green%READY%] %1
-		set /A SUCCESS=SUCCESS%+1
+		set /A SUCCESS=%SUCCESS%+1
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		echo %time%: [%Red%ERROR%RESC%] %1
