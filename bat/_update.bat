@@ -1,11 +1,11 @@
 @echo off
 REM call {This}.bat "{Folder}" "{Provider}" "Base" "{Login}" "{Password}"
-REM {Folder} - папка с файлами обновления.
-REM {Provider} - Сервер базы.
-REM {Base} - база данных.
-REM {Login} - пользователь.
-REM {Password} - пароль пользователя.
-REM {Silent} - тихий режим(0 - off, 1 - on).
+REM {Folder} - пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Provider} - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
+REM {Base} - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Login} - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Password} - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Silent} - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ(0 - off, 1 - on).
 REM Example>call _update.bat "C:\Temp" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0
 
 REM Settings
@@ -27,23 +27,23 @@ SET /a SUCCESS = 0
 SET /a TOTAL = 0
 
 SetLocal enabledelayedexpansion	
-	REM Очищаем скрипты...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ...
 	IF EXIST "%DIRLOG%" RD /S /Q "%DIRLOG%"
-	REM Выполняем скрипты...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ...
 	for /R %UPDATAPATH% %%G in (*.sql) do call :RunScript "%%G"
 	IF %SUCCESS% NEQ %TOTAL% echo %time%: %Red%Total number does not match the number of successful%RESC%
 	IF %SUCCESS% EQU %TOTAL% echo %time%: %Green%Total number corresponds to the number of successful%RESC%
 	echo %time%: %Blue%Count - %SUCCESS%/%TOTAL%%RESC%
 EndLocal
-GOTO :END
+GOTO :EOF
 :RunScript
 	IF NOT EXIST "%DIRLOG%" mkdir "%DIRLOG%"
-	REM Получаем время в.
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ.
 	set /a TM=%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%%TIME:~9,2%	
 	set /a TM=%TM: =0%
-	REM Выполняем скрипт...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ...
 	sqlcmd -S %PROVIDER% -U %USERNAME% -P %PASSWORD% -d %NAMEBASE% -b -i %1 -r%SILENT% 1> NUL 2> "%DIRLOG%\%TM%_%~n1.log"
-	REM Проверка на ошибку...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ...
 	IF !ERRORLEVEL! EQU 0 (
 		echo %time%: [%Green%SUCCESS%RESC%] %1
 		set /A SUCCESS=%SUCCESS%+1
@@ -52,4 +52,3 @@ GOTO :END
 		echo %time%: [%Red%ERROR%RESC%] %1
 	)
 	set /A TOTAL=%TOTAL%+1
-:END
