@@ -1,12 +1,12 @@
 @echo off
-REM call {This}.bat "{Folder}" {Provider} "Base" "{Login}" "{Password}" {Silent}
-REM {Folder} - папка с файлами обновления.
-REM {Provider} - Сервер базы.
-REM {Base} - база данных.
-REM {Login} - пользователь.
-REM {Password} - пароль пользователя.
-REM {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
-REM {Attemp} - повторы выполнения при наличие ошибок (1 по умолчанию)
+REM call {This}.bat "{Folder}" {Provider} "Base" "{Login}" "{Password}" {Silent} {Attemp}
+REM {Folder} - пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Provider} - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
+REM {Base} - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Login} - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Password} - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+REM {Silent} - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ(0 - off, 1 - on. off пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ).
+REM {Attemp} - пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (1 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 REM Example>call _update.bat "C:\Temp" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0 1
 
 REM Settings
@@ -28,15 +28,15 @@ SET DIRLOG=%~dp0
 SET DIRLOG=%DIRLOG%logs
 
 SetLocal enabledelayedexpansion
-	REM Значения по умолчанию
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	IF [%SILENT%] EQU [] set SILENT=1
 	IF [%ATTEMP%] EQU [] set ATTEMP=1
-	REM Очищаем скрипты...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ...
 	IF EXIST "%DIRLOG%" RD /S /Q "%DIRLOG%"
 	set ERROR_COUNT=1
 	for /L %%A in (1,1,%ATTEMP%) do (
 		set LAST_ERROR_COUNT=!SUCCESS! - !TOTAL!
-		REM Проверка на кол-во ошибок после повтора.
+		REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 		IF !ERROR_COUNT! NEQ !LAST_ERROR_COUNT! (
 			call :RunExecute %%A
 			set /A ERROR_COUNT=!SUCCESS! - !TOTAL!
@@ -52,7 +52,7 @@ GOTO :EOF
 :RunExecute
 	set /A SUCCESS=0
 	set /A TOTAL=0
-	REM Выполняем скрипты...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ...
 	for /R %UPDATAPATH% %%G in (*.sql) do call :RunScript %1 "%%G"
 	IF %SUCCESS% NEQ %TOTAL% echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
 	IF %SUCCESS% EQU %TOTAL% echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
@@ -60,12 +60,12 @@ GOTO :EOF
 GOTO :EOF
 :RunScript
 	IF NOT EXIST "%DIRLOG%" mkdir "%DIRLOG%"
-	REM Получаем время в.
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ.
 	set /a TM=%TIME:~0,2%%TIME:~3,2%%TIME:~6,2%%TIME:~9,2%	
 	set /a TM=%TM: =0%
-	REM Выполняем скрипт...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ...
 	sqlcmd -S %PROVIDER% -U %USERNAME% -P %PASSWORD% -d %NAMEBASE% -b -i %2 -r%SILENT% 1> NUL 2> "%DIRLOG%\%TM%_%~n2.log"
-	REM Проверка на ошибку...
+	REM пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ...
 	IF !ERRORLEVEL! EQU 0 (
 		echo %time%:[%1] [%Green%READY%RESC%] %2
 		set /A SUCCESS=!SUCCESS!+1
