@@ -17,6 +17,7 @@ SET ESC=
 SET RESC=%ESC%[0m
 SET Red=%ESC%[91m
 SET Green=%ESC%[92m
+SET Yellow=%ESC%[93m
 SET Tooltip=%ESC%[90m
 
 SetLocal EnableDelayedExpansion
@@ -27,14 +28,14 @@ EndLocal
 
 GOTO :END
 :RunScript
-	echo %time%: %PROVIDER% - Wait! Connection attempt...
-	sqlcmd -S %PROVIDER% -U %USERNAME% -P %PASSWORD% -Q "print '%time%: %PROVIDER% - Server responded: %Tooltip%Hehe, eee boy%RESC%';" -r%SILENT% > NUL
+	echo %time%: [%Yellow%QUERY%RESC%] %PROVIDER% - Wait! Connection attempt...
+	sqlcmd -S %PROVIDER% -U %USERNAME% -P %PASSWORD% -Q "print '%time%: [%Green%READY%RESC%] %PROVIDER% - Server responded: %Tooltip%Hehe, eee boy%RESC%';" -r%SILENT% > NUL
 	IF !ERRORLEVEL! NEQ 0 (
-		echo %time%: %PROVIDER% - %Red%Connection failed%RESC%
+		echo %time%: [%Red%ERROR%RESC%] %PROVIDER% - %Red%Connection failed%RESC%
 		call :RunScript
 	)
 	IF !ERRORLEVEL! EQU 0 (
-		echo %time%: %PROVIDER% - %Green%Connection successful%RESC%
+		echo %time%: [%Green%READY%RESC%] %PROVIDER% - %Green%Connection successful%RESC%
 		call :Wait
 	)
 	GOTO :Wait

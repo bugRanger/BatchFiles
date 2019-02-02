@@ -1,0 +1,7 @@
+1. Download and unzip the latest version from https://github.com/adoxa/ansicon/downloads
+2. Open a command prompt and cd to the folder where you unzipped it
+3. Now, cd into x64 and install it globally on your machine (For example, C:\ansicon\x64)
+4. Type ansicon.exe –i OR ansicon -i and press Enter
+5. Any program that prints ANSI colors will now display properly on your machine
+
+HINT> https://en.wikipedia.org/wiki/ANSI_escape_code
