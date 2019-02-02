@@ -56,7 +56,7 @@ GOTO :EOF
 	for /R %UPDATAPATH% %%G in (*.sql) do call :RunScript %1 "%%G"
 	IF %SUCCESS% NEQ %TOTAL% echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
 	IF %SUCCESS% EQU %TOTAL% echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
-	echo %time%: %Yellow%Count - %SUCCESS%/%TOTAL%%RESC%
+	echo %time%:[%1] %Yellow%Count - %SUCCESS%/%TOTAL%%RESC%
 GOTO :EOF
 :RunScript
 	IF NOT EXIST "%DIRLOG%" mkdir "%DIRLOG%"
