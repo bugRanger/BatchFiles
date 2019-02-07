@@ -43,8 +43,8 @@ SetLocal enableextensions
 	rd /S /Q %DIRMAKE% >NUL 2>&1
 
 	REM Проверка пути к базе данных как флага для выполнения пересоздания...
-	IF NOT EXIST "%PATHBASE%%NAMEBASE%*.mdf" (
-	IF NOT EXIST "%PATHBASE%" GOTO SkipRecreate)
+	REM IF NOT EXIST "%PATHBASE%%NAMEBASE%*.mdf" (
+	REM IF NOT EXIST "%PATHBASE%" GOTO SkipRecreate)
 	REM Подготавливаем скрипты...
 	call %MAKEPATH%replace.bat %MAKEPATH% "detach.sql" "_detach.sql" "NAME_BASE" %NAMEBASE%
 	call %MAKEPATH%replace.bat %MAKEPATH% "drop.sql" "_drop.sql" "NAME_BASE" %NAMEBASE%
@@ -55,10 +55,11 @@ SetLocal enableextensions
 	xcopy %MAKEPATH%_*.sql %DIRMAKE% /Y /C /R /S /I /Q >NUL
 	del "%MAKEPATH%_*.sql" >NUL 2>&1
 	REM Извлекаем базу данных...
+	REM call :RunScript 0 "%DIRMAKE%_detach.sql" "Detach base - %NAMEBASE%"
 	call :RunScript 0 "%DIRMAKE%_drop.sql" "Drop base - %NAMEBASE%"
 	REM Удаляем базу данных...
-	del %PATHBASE%%NAMEBASE%*.mdf >NUL 2>&1
-	del %PATHBASE%%NAMEBASE%*.ldf >NUL 2>&1
+	REM del %PATHBASE%%NAMEBASE%*.mdf >NUL 2>&1
+	REM del %PATHBASE%%NAMEBASE%*.ldf >NUL 2>&1
 	REM Создаем базу данных...
 	call :RunScript 0 "%DIRMAKE%_make.sql" "Create base - %NAMEBASE%"
 :SkipRecreate
@@ -84,19 +85,19 @@ GOTO :EOF
 	REM Пишем в консоль и в лог.
 	IF [%SILENT%] EQU [1] (
 		echo %time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT%
+		@echo %time%:[%1] [QUERY] ^> %ACT% >> %LOG%
 	)
-	@echo %time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT% >> %LOG%
 	REM Выполняем скрипт...
 	sqlcmd -S %PROVIDER% -U %USERNAME% -P %PASSWORD% -b -i %2 -r0 1> NUL 2>> %LOG%
 	REM Проверка на ошибку...
 	IF !ERRORLEVEL! EQU 0 (
 		echo %time%:[%1] [%Green%READY%RESC%] ^< %ACT%
-		@echo %time%:[%1] [%Green%READY%RESC%] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [READY] ^< %ACT% >> %LOG%
 		set /A SUCCESS=!SUCCESS!+1
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [ERROR] ^< %ACT% >> %LOG%
 	)
 	set /A TOTAL=!TOTAL!+1
 GOTO :EOF

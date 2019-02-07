@@ -77,19 +77,19 @@ GOTO :EOF
 	REM Пишем в консоль и в лог.
 	IF [%SILENT%] EQU [1] (
 		echo %time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT%
+		@echo %time%:[%1] [QUERY] ^> %ACT% >> %LOG%
 	)
-	@echo %time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT% >> %LOG%
 	REM Выполняем скрипт...
 	sqlcmd -S %PROVIDER% -d %NAMEBASE% -U %USERNAME% -P %PASSWORD% -b -i %2 -r0 1> NUL 2>> %LOG%
 	REM Проверка на ошибку...
 	IF !ERRORLEVEL! EQU 0 (
 		echo %time%:[%1] [%Green%READY%RESC%] ^< %ACT%
-		@echo %time%:[%1] [%Green%READY%RESC%] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [READY] ^< %ACT% >> %LOG%
 		set /A SUCCESS=!SUCCESS!+1
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [ERROR] ^< %ACT% >> %LOG%
 	)
 	set /A TOTAL=!TOTAL!+1
 GOTO :EOF
