@@ -19,7 +19,7 @@ SET ATTEMP=2
 	REM call "%~dp0_recreate.bat" %PROVIDER% %DATABASE% %LOGIN% %PASS% %BASEFOLDER% 0
 	REM Пробное обновление(Накатываем все что не свалиться по региональному признаку или по ошибке).
 	call "%~dp0_update.bat" "%UPDFOLDER%Queries\System\" %PROVIDER% %DATABASE% %LOGIN% %PASS% 0 0
-	call "%~dp0_update.bat" "%UPDFOLDER%Create Scripts\" %PROVIDER% %DATABASE% "%LOGIN%" "%PASSWORD%" 0 0 %LOGFOLDER%
+	REM call "%~dp0_update.bat" "%UPDFOLDER%Create Scripts\" %PROVIDER% %DATABASE% "%LOGIN%" "%PASSWORD%" 0 0 %LOGFOLDER%
 	REM Устанавливаем региональный признак.
 	REM call???
 	REM Обновление базы с региональными настройками.
@@ -31,6 +31,7 @@ SET ATTEMP=2
 		REM IF %READY% EQU %AMOUNT% GOTO :RESULT
 	REM )	
 :RESULT
+	@echo %ENDTIME%: Stop %~n0%~x0 >> %LOGFOLDER%
 	REM ------------------------------------------------------------------------------------------------
 	REM Подсчет затраченного времени.
 	REM ------------------------------------------------------------------------------------------------
@@ -53,7 +54,6 @@ SET ATTEMP=2
 	if %DURATIONM% LSS 10 set DURATIONM=0%DURATIONM%
 	if %DURATIONS% LSS 10 set DURATIONS=0%DURATIONS%
 	if %DURATIONHS% LSS 10 set DURATIONHS=0%DURATIONHS%
-	echo %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%	
 	REM ------------------------------------------------------------------------------------------------
 	REM Выводим лого для разделения.
 	call "%~dp0_logo.bat"
@@ -61,6 +61,8 @@ SET ATTEMP=2
 	IF %READY% NEQ %AMOUNT% echo %time%: %Red%Total number does not match the number of successful%RESC%
 	IF %READY% EQU %AMOUNT% echo %time%: %Green%Total number corresponds to the number of successful%RESC%
 	echo %time%: %BCyan%Total count - %READY%/%AMOUNT%%RESC%
-	@echo %ENDTIME%: Stop %~n0%~x0 >> %LOGFOLDER%
+	REM Время выполненея.
+	echo.
+	echo Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%
 	timeout /t 15
 GOTO :EOF

@@ -58,7 +58,7 @@ GOTO :EOF
 	set /A SUCCESS=0
 	set /A TOTAL=0
 	REM Выполняем скрипты...
-	for /R %UPDATAPATH% %%G in (*.sql) do call :RunScript %1 "%%G" "%%G"
+	for /R %UPDATAPATH% %%G in (*.sql) do call :RunScript %1 "%%G" "%%~nG%%~xG"
 	IF %SUCCESS% NEQ %TOTAL% echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
 	IF %SUCCESS% EQU %TOTAL% echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
 	echo %time%: %Cyan%Count - %SUCCESS%/%TOTAL%%RESC%
