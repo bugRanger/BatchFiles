@@ -5,14 +5,14 @@ REM LSS - less than
 REM LEQ - less than or equal
 REM GTR - greater than
 REM GEQ - greater than or equal
-SET _PROVIDER=(localdb)\MSSQLLocalDB
+SET _PROVIDER=HUKUMKA\SQLEXPRESS
 SET _NAMEBASE=Example
-SET _BASEFOLDER="D:\Temp"
+SET _BASEFOLDER="E:\Temp"
 SET _BASEFOLDER=%_BASEFOLDER:"=%
-SET _UPDFOLDER="D:\Projects\Project.SIM\SIMADATABASE\"
+SET _UPDFOLDER="C:\Users\Hukuma\Documents\Visual Studio 2015\Projects\SIMADATABASE\"
 SET _UPDFOLDER=%_UPDFOLDER:"=%
-SET _USERNAME=""
-SET _PASSWORD=""
+SET _USERNAME="sa"
+SET _PASSWORD="1234"
 SET _LOGFOLDER=.\r.log
 SET _ATTEMP=2
 SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
@@ -24,10 +24,11 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	del %_LOGFOLDER% >NUL 2>&1
 	@echo %STARTTIME%: Start %~n0%~x0 >> %_LOGFOLDER%
 	:: Создаем базу.
-	REM call "%~dp0_recreate.bat" "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% %_BASEFOLDER% 0 %_LOGFOLDER%
-	echo First content...
+	echo %time%: Create database...
+	call "%~dp0_recreate.bat" "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% %_BASEFOLDER% 0 %_LOGFOLDER%
+	echo %time%: Make parameters...
 	:: Устанавливаем региональный признак.
-	call "%~dp0_update.bat" "%_UPDFOLDER%Create Scripts\" Parameters.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 1 %_LOGFOLDER% 
+	call "%~dp0_update.bat" "%_UPDFOLDER%Create Scripts\" Parameters.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 %_LOGFOLDER% 
 	
 	del region.sql >NUL 2>&1
 	echo DECLARE @parameterValue VARCHAR(MAX), @parameterName VARCHAR(MAX) >> region.sql
@@ -45,16 +46,16 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	echo 	WHERE Parametr_Name = @parameterName >> region.sql
 	echo END >> region.sql
 	:: Устанавливаем региональный признак.
-	call "%~dp0_update.bat" "%~dp0" region.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 1 %_LOGFOLDER%
+	call "%~dp0_update.bat" "%~dp0" region.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 %_LOGFOLDER%
 	:: Выполняем региональные обновления.
-	echo Merge content...
+	echo %time%: Merge content...
 	:: Очистка папки.
-	set STEP=0;
+	set STEP=0
 	set TRASH=.\trash.txt
 	del %TRASH% >NUL 2>&1
 	:: Выполняем обновление.
-	call "%~dp0_update.bat" "%_UPDFOLDER%Stored Procedures\System\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 1 %_LOGFOLDER%
-	REM call "%~dp0_update.bat" "%_UPDFOLDER%Create Scripts\" Competition*.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 1 %_LOGFOLDER%
+	call "%~dp0_update.bat" "%_UPDFOLDER%Stored Procedures\System\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 %_LOGFOLDER%
+	call "%~dp0_update.bat" "%_UPDFOLDER%Create Scripts\" Competition*.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 %_LOGFOLDER%
 	:: Забираем результаты в буфер.
 	SET _READY=%READY%
 	SET _AMOUNT=%AMOUNT%
@@ -62,46 +63,44 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 :CHECK_TRASH
 	set /a READY=0
 	set /a AMOUNT=0
+	REM GOTO :END_TRASH
 	IF NOT EXIST %TRASH% GOTO :END_TRASH
+	echo %time%: Update from trash...
 :: Указываем выполнение с задержкой, т.к. у нас есть подсчет в цикле итераций (иначе подсчет не будет корректно выполняться).
 SetLocal EnableDelayedExpansion
-	set last=
-	set list=
 	:: Собираем список.
 	for /f "delims=" %%A in (%TRASH%) do (
-		IF [!last!] NEQ [] set list=!list!;%%A
-		IF [!last!] EQU [] set last=%%A
-		set /a count=!count!+1
+		IF [!last!] EQU [] (
+			set last=%%A
+			set prevLine=%%A
+		)
+		IF [!last!] NEQ [] IF [!prevLine!] NEQ [%%A] (
+			set /a count=!count!+1
+			set list=!list!;%%A
+			set prevLine=%%A
+		)
 	)
-	set list=%list%;%last%;
+	set list=%list%;%last%
+	set /a count=!count!+1
+
 	del %TRASH% >NUL 2>&1
 	:: Идем по списку.
 	for %%A in (%list%) do ( 
-		REM echo %%~nxA 
-		@echo %%A >> %TRASH%
-		REM call "%~dp0_update.bat" "%%~pdA" %%~nxA "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 
+		call "%~dp0_update.bat" "" %%A "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 2 %_LOGFOLDER%
 	)
-	IF %STEP% NEQ !count! IF %READY% NEQ %AMOUNT% (
-EndLocal
+
+	echo %time%: %Yellow%Last attempt - %STEP%/!count!%RESC%
+	echo %time%: %BCyan%Total count - %READY%/%AMOUNT%%RESC%
+(
+	REM IF [%STEP%] GEQ [0] GOTO :END_TRASH
+	:: Проверяем на наличие провала при выволнение.
+	IF [%STEP%] NEQ [!count!] IF %READY% NEQ %AMOUNT% (
+		EndLocal
 		set /a STEP=%STEP%+1
-		echo.
 		GOTO :CHECK_TRASH
 	)
+)
 :END_TRASH
-	REM for /f "tokens=*" %%a in (%TRASH%) do (
-		REM echo line=%%a
-	REM )
-	REM for /L %%S in (1,1,%_ATTEMP%) do (
-		REM set /a READY=0
-		REM set /a AMOUNT=0
-		
-		
-		REM :: Выполняем обновление.
-		REM call "%~dp0_update.bat" "%_UPDFOLDER%Stored Procedures\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 1 %_LOGFOLDER%
-		REM :: В случае успеха выходим.
-		REM IF %%S NEQ 1 IF %READY% EQU %AMOUNT% GOTO :BREAK_ATTEMP
-	REM )
-:BREAK_ATTEMP
 	set /a READY=%READY% + %_READY%
 	set /a AMOUNT=%_AMOUNT%
 

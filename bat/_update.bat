@@ -1,5 +1,5 @@
 @echo off
-REM call {This}.bat "{UPD_FOLDER}" {UPD_FILE} {DB_PROVIDER} "{DB_NAME}" "{DB_USER}" "{DB_PASS}" {Attemp} {Silent} {LogFile}
+REM call {This}.bat "{UPD_FOLDER}" {UPD_FILE} {DB_PROVIDER} "{DB_NAME}" "{DB_USER}" "{DB_PASS}" {Attemp} {Silent}
 REM 1. {UPD_FOLDER} - папка с файлами обновления.
 REM 2. {UPD_FILE} - наименование выполняемых файлов.
 REM 2. {DB_PROVIDER} - сервер (имя/адрес).
@@ -8,8 +8,7 @@ REM 4. {DB_USER} - пользователь.
 REM 5. {DB_PASS} - пароль пользователя.
 REM 6. {Attemp} - повторы выполнения при наличие ошибок (1 по умолчанию)
 REM 7. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
-REM 8. {LogFile} - файл для сбора результатов выполнения.
-REM Example>call _update.bat "C:\Temp" "*.sql" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0 1 ".\result.log"
+REM Example>call _update.bat "C:\Temp" "*.sql" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0 1
 
 REM Settings
 SET UPD_FOLDER=%1
@@ -54,7 +53,7 @@ SetLocal EnableDelayedExpansion
 	)
 ( 
 	EndLocal
-	set FOLDER=%UPD_FOLDER%
+	REM set FOLDER=%UPD_FOLDER%
 	set /A READY=%READY% + %SUCCESS%
 	set /A AMOUNT=%AMOUNT% + %TOTAL%
 )
@@ -63,14 +62,24 @@ GOTO :EOF
 	set /A SUCCESS=0
 	set /A TOTAL=0
 	REM Выполняем скрипты...
-	for /R %UPD_FOLDER% %%G in (%UPD_FILE%) do call :RunScript %1 "%%G" "%%~nxG"
-	IF [%SILENT%] LSS [2] IF %SUCCESS% NEQ %TOTAL% (
-		echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
+	:: Если не указан каталог поиска.
+	IF NOT EXIST %UPD_FOLDER% (
+		FOR /F "delims=" %%F IN (%UPD_FILE%) DO (
+			call :RunScript %1 %UPD_FILE% %%~nxF
+		)
 	)
-	IF [%SILENT%] LSS [2] IF %SUCCESS% EQU %TOTAL% (
-		echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
+	:: Если указан каталог поиска.
+	IF EXIST %UPD_FOLDER% (
+		for /R %UPD_FOLDER% %%G in (%UPD_FILE%) do call :RunScript %1 "%%G" "%%~nxG"
+		:: Выводим результат выполнения.
+		IF [%SILENT%] LSS [2] IF %SUCCESS% NEQ %TOTAL% (
+			echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
+		)
+		IF [%SILENT%] LSS [2] IF %SUCCESS% EQU %TOTAL% (
+			echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
+		)
+		IF [%SILENT%] LSS [2] echo %time%: %BCyan%Count - %SUCCESS%/%TOTAL%%RESC%
 	)
-	IF [%SILENT%] LSS [2] echo %time%: %BCyan%Count - %SUCCESS%/%TOTAL%%RESC%
 GOTO :EOF
 :RunScript
 	IF NOT EXIST %2 GOTO :EOF
