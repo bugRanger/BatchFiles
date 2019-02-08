@@ -1,10 +1,10 @@
 @echo off
 REM call {this}.bat "{Provider}" "{Login}" "{Password}" {Silent} "{Timeout}"
-REM {Provider} - Сервер базы.
-REM {Login} - пользователь.
-REM {Password} - пароль пользователя.
-REM {Silent} - тихий режим(0 - off, 1 - on).
-REM {Timeout} - время ожидания(секунды).
+REM 1. {Provider} - Сервер базы.
+REM 2. {Login} - пользователь.
+REM 3. {Password} - пароль пользователя.
+REM 4. {Silent} - тихий режим(0 - off, 1 - on).
+REM 5. {Timeout} - время ожидания(секунды).
 REM Example>call _reconnect.bat %~n0 "sa" "testSA" 0 "45"
 REM Settings
 SET PROVIDER=%1

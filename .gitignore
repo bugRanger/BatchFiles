@@ -4,3 +4,4 @@
 bat/sqlupdate.bat
 *.sql
 *.txt
+*.tmp

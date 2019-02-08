@@ -1,13 +1,14 @@
 @echo off
-REM call {This}.bat "{UPD_FOLDER}" {UPD_FILE} {DB_PROVIDER} "{DB_NAME}" "{DB_USER}" "{DB_PASS}" {Attemp} {Silent}
+REM call {This}.bat "{UPD_FOLDER}" {UPD_FILE} {DB_PROVIDER} "{DB_NAME}" "{DB_USER}" "{DB_PASS}" {Attemp} {Silent} {LogFile}
 REM 1. {UPD_FOLDER} - папка с файлами обновлени€.
 REM 2. {UPD_FILE} - наименование выполн€емых файлов.
-REM 2. {DB_PROVIDER} - сервер (им€/адрес).
-REM 3. {DB_NAME} - база данных.
-REM 4. {DB_USER} - пользователь.
-REM 5. {DB_PASS} - пароль пользовател€.
-REM 6. {Attemp} - повторы выполнени€ при наличие ошибок (1 по умолчанию)
-REM 7. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
+REM 3. {DB_PROVIDER} - сервер (им€/адрес).
+REM 4. {DB_NAME} - база данных.
+REM 5. {DB_USER} - пользователь.
+REM 6. {DB_PASS} - пароль пользовател€.
+REM 7. {Attemp} - повторы выполнени€ при наличие ошибок (1 по умолчанию)
+REM 8. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
+REM 9. {LogFile} - файл дл€ сбора результатов выполнени€.
 REM Example>call _update.bat "C:\Temp" "*.sql" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0 1
 
 REM Settings
@@ -31,7 +32,6 @@ SET Yellow=%ESC%[93m
 SET Tooltip=%ESC%[90m
 
 SET DIRLOG=%~dp0logs
-SET TRASH=%TRASH%
 
 REM ”казываем выполнение с задержкой, т.к. у нас есть подсчет в цикле итераций (иначе подсчет не будет корректно выполн€тьс€).
 SetLocal EnableDelayedExpansion
@@ -40,7 +40,7 @@ SetLocal EnableDelayedExpansion
 	IF [%ATTEMP%] EQU [] set ATTEMP=1
 	IF [%ATTEMP%] NEQ [] set /a ATTEMP=ATTEMP+1
 	REM ќчищаем скрипты...
-	IF EXIST "%DIRLOG%" RD /S /Q "%DIRLOG%"
+	REM IF EXIST "%DIRLOG%" RD /S /Q "%DIRLOG%"
 	set /a ERROR_COUNT=0
 	set /a LAST_ERROR_COUNT=1
 	for /L %%A in (1,1,%ATTEMP%) do (
@@ -53,7 +53,6 @@ SetLocal EnableDelayedExpansion
 	)
 ( 
 	EndLocal
-	REM set FOLDER=%UPD_FOLDER%
 	set /A READY=%READY% + %SUCCESS%
 	set /A AMOUNT=%AMOUNT% + %TOTAL%
 )
@@ -64,21 +63,21 @@ GOTO :EOF
 	REM ¬ыполн€ем скрипты...
 	:: ≈сли не указан каталог поиска.
 	IF NOT EXIST %UPD_FOLDER% (
-		FOR /F "delims=" %%F IN (%UPD_FILE%) DO (
-			call :RunScript %1 %UPD_FILE% %%~nxF
+		FOR /F "delims=" %%A IN (%UPD_FILE%) DO (
+			call :RunScript %1 %UPD_FILE% "%%~nxA"
 		)
 	)
 	:: ≈сли указан каталог поиска.
 	IF EXIST %UPD_FOLDER% (
 		for /R %UPD_FOLDER% %%G in (%UPD_FILE%) do call :RunScript %1 "%%G" "%%~nxG"
 		:: ¬ыводим результат выполнени€.
-		IF [%SILENT%] LSS [2] IF %SUCCESS% NEQ %TOTAL% (
+		IF [%SILENT%] LSS [2] IF !SUCCESS! NEQ !TOTAL! (
 			echo %time%:[%1] %Red%Total number does not match the number of successful%RESC%
 		)
-		IF [%SILENT%] LSS [2] IF %SUCCESS% EQU %TOTAL% (
+		IF [%SILENT%] LSS [2] IF !SUCCESS! EQU !TOTAL! (
 			echo %time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
 		)
-		IF [%SILENT%] LSS [2] echo %time%: %BCyan%Count - %SUCCESS%/%TOTAL%%RESC%
+		IF [%SILENT%] LSS [2] echo %time%:[%1] %BCyan%Count - !SUCCESS!/!TOTAL!%RESC%
 	)
 GOTO :EOF
 :RunScript

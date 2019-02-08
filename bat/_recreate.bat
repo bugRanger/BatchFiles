@@ -9,6 +9,33 @@ REM 6. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
 REM 7. {LogFile} - файл для сбора результатов выполнения.
 REM Example>call _recreate.bat "192.168.70.26" "Dev44_Atlan" "sa" "testSA" "C:\Temp" 1 ".\result.log"
 
+REM +   Add                set /a "_num=_num+5"
+REM +=  Add variable       set /a "_num+=5"
+REM -   Subtract (or unary)set /a "_num=_num-5"
+REM -=  Subtract variable  set /a "_num-=5"
+REM *   Multiply           set /a "_num=_num*5"
+REM *=  Multiply variable  set /a "_num*=5"
+REM /   Divide             set /a "_num=_num/5"
+REM /=  Divide variable    set /a "_num/=5"
+REM %   Modulus            set /a "_num=5%%2"
+REM %%= Modulus            set /a "_num%%=5" 
+REM !   Logical negation  0 (FALSE) ? 1 (TRUE) and any non-zero value (TRUE) ? 0 (FALSE)
+REM ~   One's complement (bitwise negation) 
+REM &   AND                set /a "_num=5&3"    0101 AND 0011 = 0001 (decimal 1)
+REM &=  AND variable       set /a "_num&=3"
+REM |   OR                 set /a "_num=5|3"    0101 OR 0011 = 0111 (decimal 7)
+REM |=  OR variable        set /a "_num|=3"
+REM ^   XOR                set /a "_num=5^3"    0101 XOR 0011 = 0110 (decimal 6)
+REM ^=  XOR variable       set /a "_num=^3"
+REM <<  Left Shift.    (sign bit ? 0)
+REM >>  Right Shift.   (Fills in the sign bit such that a negative number always remains negative.)
+				   REM Neither ShiftRight nor ShiftLeft will detect overflow.
+REM <<= Left Shift variable     set /a "_num<<=2"
+REM >>= Right Shift variable    set /a "_num>>=2"
+
+REM ( )  Parenthesis group expressions  set /a "_num=(2+3)*5"
+REM ,   Commas separate expressions    set /a "_num=2,_result=_num*5"
+
 SET DB_PROVIDER=%1
 SET DB_NAME=%2
 SET DB_USER=%3
