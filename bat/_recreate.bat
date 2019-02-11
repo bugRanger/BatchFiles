@@ -36,6 +36,14 @@ REM >>= Right Shift variable    set /a "_num>>=2"
 REM ( )  Parenthesis group expressions  set /a "_num=(2+3)*5"
 REM ,   Commas separate expressions    set /a "_num=2,_result=_num*5"
 
+
+REM EQU - equal
+REM NEQ - not equal
+REM LSS - less than
+REM LEQ - less than or equal
+REM GTR - greater than
+REM GEQ - greater than or equal
+
 SET DB_PROVIDER=%1
 SET DB_NAME=%2
 SET DB_USER=%3
@@ -128,7 +136,7 @@ GOTO :EOF
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		IF [%SILENT%] LSS [3] echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo %time%:[%1] [ERROR] ^< %ACT%>>%LOG%
+		@echo %time%:[%1] [ERROR] ^< %ACT% ^(%2^)>>%LOG%
 		REM Пишем заметку о файле с ошибкой в свалку.
 		IF [!TRASH!] NEQ [] (
 			@echo %2>>!TRASH!

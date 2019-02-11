@@ -6,3 +6,4 @@ bat/sqlupdate.bat
 *.txt
 *.tmp
 bat/test.bat
+bat/upd.db.sima.Example.bat

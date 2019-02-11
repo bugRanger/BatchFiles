@@ -38,7 +38,7 @@ SetLocal EnableDelayedExpansion
 	:: Значения по умолчанию
 	IF [%SILENT%] EQU [] set SILENT=1
 	IF [%ATTEMP%] EQU [] set ATTEMP=1
-	IF [%ATTEMP%] NEQ [] set /a ATTEMP=%ATTEMP%+1
+	IF [%ATTEMP%] EQU [0] set /a ATTEMP=%ATTEMP%+1
 	:: Очищаем скрипты...
 	:: IF EXIST "%DIRLOG%" RD /S /Q "%DIRLOG%"
 	set /a ERROR_COUNT=0
@@ -115,7 +115,7 @@ GOTO :EOF
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		IF [%SILENT%] LSS [3] echo.%time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo.%time%:[%1] [ERROR] ^< %ACT%>>%LOG%
+		@echo.%time%:[%1] [ERROR] ^< %ACT% ^(%2^)>>%LOG%
 		:: Пишем заметку о файле с ошибкой в свалку.
 		IF [!TRASH!] NEQ [] (
 			@echo.%2 >> !TRASH!
