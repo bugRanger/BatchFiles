@@ -5,3 +5,4 @@ bat/sqlupdate.bat
 *.sql
 *.txt
 *.tmp
+bat/test.bat
