@@ -28,18 +28,19 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	:: Время запуска.
 	:: ------------------------------------------------------------------------------------------------
 	set STARTTIME=%time%
-	@echo %STARTTIME%: Start %~nx0 >> %_LOGFOLDER%
-	REM Создание базы данных, по необходимости.
+	echo.%STARTTIME%: Start %~nx0
+	@echo.%STARTTIME%: Start %~nx0>>%_LOGFOLDER%
 	:: ------------------------------------------------------------------------------------------------
 	:: Создаем базу.
 	:: ------------------------------------------------------------------------------------------------
-	echo %time%: Create database...
+	echo.%time%: Create database...
+	@echo.%time%: Create database...>>%_LOGFOLDER%
 	call "%~dp0_recreate.bat" "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% %_BASEFOLDER% 0 %_LOGFOLDER%
-	REM Настройка базы, необходимая для успеха выполнения скриптов с проверкой на тип региона.
 	:: ------------------------------------------------------------------------------------------------
 	:: Устанавливаем региональный признак.
 	:: ------------------------------------------------------------------------------------------------
-	echo %time%: Make parameters...
+	echo.%time%: Make parameters...
+	@echo.%time%: Make parameters...>>%_LOGFOLDER%
 	call "%~dp0_update.bat" "" "%_UPDFOLDER%Create Scripts\Parameters.sql" "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER% 
 	:: Удаление файла.
 	del region.sql >NUL 2>&1
@@ -62,21 +63,23 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	echo END >> region.sql
 	:: Устанавливаем региональный признак.
 	call "%~dp0_update.bat" "" "%~dp0region.sql" "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
-	REM Обновление данных.
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем региональные обновления.
 	:: ------------------------------------------------------------------------------------------------
-	echo %time%: Update content...
+	echo.%time%: Update content...
+	@echo.%time%: Update content...>>%_LOGFOLDER%
 	:: Задаем каталоги.
-	set TRASH=.\trash.log
-	set TEMP=.\trash.tmp
+	set TRASH=trash.log
+	set TEMP=trash.tmp
 	:: Удаление файла.
 	del %TRASH% >NUL 2>&1
-	REM Скрипты обновления, в случае ошибки падают в <c>TRASH</c> для повтора выполнения со смещением последовательности на -1.
+	:: Скрипты обновления, в случае ошибки падают в <c>TRASH</c> для повтора выполнения со смещением последовательности на -1.
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем обновление.
 	:: ------------------------------------------------------------------------------------------------
-	call "%~dp0_update.bat" "%_UPDFOLDER%Stored Procedures\System\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
+	REM call "%~dp0_update.bat" "%_UPDFOLDER%Utils\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
+	REM call "%~dp0_update.bat" "%_UPDFOLDER%Utils\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
+	
 	call "%~dp0_update.bat" "%_UPDFOLDER%Create Scripts\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
 	call "%~dp0_update.bat" "%_UPDFOLDER%Stored Procedures\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
 	call "%~dp0_update.bat" "%_UPDFOLDER%Queries\Settings\" *.sql "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
@@ -87,20 +90,13 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	:: Сохранение результатов выполнение, до повторов.
 	:: ------------------------------------------------------------------------------------------------
 	SET _READY=%READY%
-	SET _AMOUNT=%AMOUNT%
-	REM Выполняем повторы для разрешения конфликтов.
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем попытку разрешения конфликтов.
 	:: ------------------------------------------------------------------------------------------------
-	SET STEP=0
 :CHECK_TRASH
-	:: Обнуление результатов.
-	set READY=0
-	set AMOUNT=0
+	REM GOTO :END_TRASH
 	:: Проверка наличия.
 	IF NOT EXIST "%TRASH%" GOTO :END_TRASH
-	:: ------------------------------------------------------------------------------------------------
-	:: ------------------------------------------------------------------------------------------------
 	:: Создаем копию.
 	del %TEMP%>NUL 2>&1
 	copy /Y %TRASH% %TEMP%>NUL 2>&1
@@ -110,30 +106,30 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	:: Получаем количество строк.
 	:: ------------------------------------------------------------------------------------------------
 	for /F "tokens=2 delims=:" %%A in ('find /c /v "" %TEMP%') do set /a count=%%A
-	echo %time%:[%count%] Conflict resolution attempt...
+	echo.%time%:[%count%] Conflict resolution...
+	@echo.%time%:[%count%] Conflict resolution...>>%_LOGFOLDER%
 	:: Проходим в обратном направление.
-	setlocal enableextensions disabledelayedexpansion
+	SetLocal EnableExtensions DisableDelayedExpansion
 	for /f "tokens=1,* delims=¬" %%a in ('
-        cmd /v:off /e /q /c"set "counter^=10000000" & for /f usebackq^ delims^=^ eol^= %%c in ("%TEMP%") do (set /a "counter+^=1" & echo(¬%%c)"
-        ^| sort /r
-    ') do (
+		cmd /v:off /e /q /c"set "counter^=10000000" & for /f usebackq^ delims^=^ eol^= %%c in ("%TEMP%") do (set /a "counter+^=1" & echo(¬%%c)"
+		^| sort /r
+	') do (
 		call "%~dp0_update.bat" "" %%b "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
-    )
-	:: ------------------------------------------------------------------------------------------------
-	:: ------------------------------------------------------------------------------------------------
+	)
+	(
+		EndLocal
+		set /a READY=%READY%
+	)
 :END_TRASH
-	:: ------------------------------------------------------------------------------------------------
-	:: Задаем результаты выполнения.
-	:: ------------------------------------------------------------------------------------------------
-	set /a READY=%_READY%
-	set /a AMOUNT=%_AMOUNT%
 	:: ------------------------------------------------------------------------------------------------
 	:: Подсчет затраченного времени.
 	:: ------------------------------------------------------------------------------------------------
 	:: Получаем текущее время.
 	set ENDTIME=%time%
-	@echo %ENDTIME%: Stop %~nx0 >> %_LOGFOLDER%
+	echo.%ENDTIME%: Stop %~nx0
+	@echo.%ENDTIME%: Stop %~nx0>>%_LOGFOLDER%
 	:: Переводим время в миллисекунды.
+	
 	set /A STARTTIME=(%STARTTIME:~0,2%-100)*360000 + (%STARTTIME:~3,2%-100)*6000 + (%STARTTIME:~6,2%-100)*100 + (%STARTTIME:~9,2%-100)
 	set /A ENDTIME=(%ENDTIME:~0,2%-100)*360000 + (%ENDTIME:~3,2%-100)*6000 + (%ENDTIME:~6,2%-100)*100 + (%ENDTIME:~9,2%-100)
 	:: Находим разницу.
@@ -150,6 +146,7 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	if [%DURATIONM%] LSS [10] set DURATIONM=0%DURATIONM%
 	if [%DURATIONS%] LSS [10] set DURATIONS=0%DURATIONS%
 	if [%DURATIONHS%] LSS [10] set DURATIONHS=0%DURATIONHS%
+	
 	:: ------------------------------------------------------------------------------------------------
 	:: Выводим лого для разделения.
 	:: ------------------------------------------------------------------------------------------------
@@ -157,26 +154,22 @@ SET REGION=3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73
 	:: ------------------------------------------------------------------------------------------------
 	:: Выводим результат выполнения.
 	:: ------------------------------------------------------------------------------------------------
-	IF %READY% NEQ %AMOUNT% echo %time%: %Red%Total number does not match the number of successful%RESC%
-	IF %READY% EQU %AMOUNT% echo %time%: %Green%Total number corresponds to the number of successful%RESC%
-	echo %time%: %BCyan%Total count - %READY%/%AMOUNT%%RESC%
+	IF %READY% NEQ %AMOUNT% (
+		echo.%time%: %Red%Total number does not match the number of successful%RESC%
+		@echo.%time%: Total number does not match the number of successful>>%_LOGFOLDER%
+	)
+	IF %READY% EQU %AMOUNT% (
+		echo.%time%: %Green%Total number corresponds to the number of successful%RESC%
+		@echo.%time%: Total number corresponds to the number of successful>>%_LOGFOLDER%
+	)
+	echo.%time%: %BCyan%Total count - %READY%/%AMOUNT%%RESC%
+	@echo.%time%: Total count - %READY%/%AMOUNT%>>%_LOGFOLDER%
 	:: ------------------------------------------------------------------------------------------------
 	:: Время выполнения.
 	:: ------------------------------------------------------------------------------------------------
 	echo.
-	echo Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%
-	timeout /t 145
-GOTO :EOF
-:COPY_NUMLINE
-	SETLOCAL DisableDelayedExpansion
-	for /F "usebackq delims=" %%A in (`"findstr /n ^^ %1"`) do (
-		set "var=%%A"
-		SETLOCAL EnableDelayedExpansion
-		for /f "delims=:" %%I in ("!var!") do IF [%%I] EQU [%2] (
-			set "var=!var:*:=!"
-			::
-			call "%~dp0_update.bat" "" !var! "%_PROVIDER%" %_NAMEBASE% %_USERNAME% %_PASSWORD% 0 %_SILENT% %_LOGFOLDER%
-		)
-		ENDLOCAL
-	)
+	echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%
+	@echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%>>%_LOGFOLDER%
+	pause
+	REM timeout /t 145
 GOTO :EOF

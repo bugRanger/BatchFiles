@@ -29,7 +29,7 @@ REM ^   XOR                set /a "_num=5^3"    0101 XOR 0011 = 0110 (decimal 6)
 REM ^=  XOR variable       set /a "_num=^3"
 REM <<  Left Shift.    (sign bit ? 0)
 REM >>  Right Shift.   (Fills in the sign bit such that a negative number always remains negative.)
-				   REM Neither ShiftRight nor ShiftLeft will detect overflow.
+REM Neither ShiftRight nor ShiftLeft will detect overflow.
 REM <<= Left Shift variable     set /a "_num<<=2"
 REM >>= Right Shift variable    set /a "_num>>=2"
 
@@ -83,12 +83,12 @@ SetLocal EnableDelayedExpansion
 	del "%MAKEPATH%_*.sql" >NUL 2>&1
 	REM Извлекаем базу данных...
 	REM call :RunScript 0 "%DIRMAKE%_detach.sql" "Detach base - %DB_NAME%"
-	call :RunScript 0 "%DIRMAKE%_drop.sql" "Drop base - %DB_NAME%"
+	call :RunScript 1 "%DIRMAKE%_drop.sql" "Drop base - %DB_NAME%"
 	REM Удаляем базу данных...
 	REM del %DB_PATH%%DB_NAME%*.mdf >NUL 2>&1
 	REM del %DB_PATH%%DB_NAME%*.ldf >NUL 2>&1
 	REM Создаем базу данных...
-	call :RunScript 0 "%DIRMAKE%_make.sql" "Create base - %DB_NAME%"
+	call :RunScript 1 "%DIRMAKE%_make.sql" "Create base - %DB_NAME%"
 :SkipRecreate
 	REM Очищаем скрипты...
 	rd /S /Q %DIRMAKE% >NUL 2>&1 
@@ -115,23 +115,23 @@ GOTO :EOF
 	REM Пишем в консоль и в лог.
 	IF [%SILENT%] EQU [0] (
 		echo %time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT%
-		@echo %time%:[%1] [QUERY] ^> %ACT% >> %LOG%
+		@echo %time%:[%1] [QUERY] ^> %ACT%>>%LOG%
 	)
 	REM Выполняем скрипт...
-	sqlcmd -S %DB_PROVIDER% -U %DB_USER% -P %DB_PASS% -b -i %2 -r0 1> NUL 2>> !LOG!
+	sqlcmd -S %DB_PROVIDER% -U %DB_USER% -P %DB_PASS% -b -i %2 -r0 1> NUL 2>>!LOG!
 	set /A TOTAL=!TOTAL!+1
 	REM Проверка на ошибку...
 	IF !ERRORLEVEL! EQU 0 (
 		IF [%SILENT%] LSS [3] echo %time%:[%1] [%Green%READY%RESC%] ^< %ACT%
-		@echo %time%:[%1] [READY] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [READY] ^< %ACT%>>%LOG%
 		set /A SUCCESS=!SUCCESS!+1
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		IF [%SILENT%] LSS [3] echo %time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo %time%:[%1] [ERROR] ^< %ACT% >> %LOG%
+		@echo %time%:[%1] [ERROR] ^< %ACT%>>%LOG%
 		REM Пишем заметку о файле с ошибкой в свалку.
 		IF [!TRASH!] NEQ [] (
-			@echo %2 >> !TRASH!
+			@echo %2>>!TRASH!
 		)
 	)
 GOTO :EOF
