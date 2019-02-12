@@ -1,12 +1,12 @@
 @echo off
-:: Example: call {This}.bat "{DB_PROVIDER_}" "{DB_NAME_}" "{DB_USER_}" "{DB_PASS_}" "{DB_PATH_}" {UPD_FOLDER_} {REGION_} {ATTEMP_} {SILENT_}
+:: Example: call {This}.bat "{DB_PROVIDER_}" "{DB_NAME_}" "{DB_USER_}" "{DB_PASS_}" "{DB_PATH_}" {UPD_FOLDER_} {REGION_GUID} {ATTEMP_} {SILENT_}
 :: 1. {DB_PROVIDER_} - сервер (имя/адрес)
 :: 2. {DB_NAME_} - наименование базы данных.
 :: 3. {DB_USER_} - пользователь.
 :: 4. {DB_PASS_} - пароль пользователя.
 :: 5. {DB_PATH_} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Этот параметр используется для принудительного пересоздания базы данных.
 :: 6. {UPD_FOLDER_} - папка с файлами обновления.
-:: 7. {REGION_} - guid используемого региона.
+:: 7. {REGION_GUID} - guid используемого региона.
 :: 8. {ATTEMP_} - повторы выполнения при наличие ошибок (1 по умолчанию)
 :: 9. {SILENT_} - тихий режим(0 - off, 1 - on. off по умолчанию).
 :: 10. {LOGFILE_} - файл для сбора результатов выполнения.
@@ -20,13 +20,27 @@ SET DB_USER_=%3
 SET DB_PASS_=%4
 SET DB_PATH_=%5
 SET DB_PATH_=%DB_PATH_:"=%
+SET DB_PATH_="%DB_PATH_%"
 SET UPD_FOLDER_=%6
 SET UPD_FOLDER_=%UPD_FOLDER_:"=%
-SET REGION_=%7
+SET REGION_GUID=%7
 SET ATTEMP_=%8
 SET SILENT_=%9
-SET LOGFILE_=.\%~n0.log
+:: Если не был указан лог то выпадет ошибка.
+SET LOGFILE_=%LOGFILE_%
+SET LOGFILE_=%LOGFILE_:"=%
+SET LOGFILE_="%LOGFILE_%"
 
+:: Проверка на наличие параметра.
+IF [%1] EQU [] (
+	echo.Need to specify arguments
+	pause
+	GOTO :EOF
+)
+
+	:: Папка для временных файлов.
+	set temp_=.\temp\
+	IF NOT EXIST "%temp_%" mkdir "%temp_%"
 	:: Обнуление результатов.
 	set READY=0
 	set AMOUNT=0
@@ -34,6 +48,7 @@ SET LOGFILE_=.\%~n0.log
 	IF [%SILENT_%] EQU [] set SILENT_=1
 	IF [%ATTEMP_%] EQU [] set ATTEMP_=1
 	IF [%ATTEMP_%] NEQ [] set /a ATTEMP_=%ATTEMP_%+1
+	IF [%LOGFILE_%] EQU [""] set LOGFILE_=.\%~n0.log
 	:: Удаление файла.
 	del %LOGFILE_% >NUL 2>&1
 	:: ------------------------------------------------------------------------------------------------
@@ -47,7 +62,7 @@ SET LOGFILE_=.\%~n0.log
 :: ----------------------------------------------------------------------------------------------------
 :RECREATE
 	:: Проверка наличия.
-	IF [%DB_PATH_%] EQU [] GOTO :END_RECREATE
+	IF [%DB_PATH_%] EQU [""] GOTO :END_RECREATE
 	:: ------------------------------------------------------------------------------------------------
 	:: Создаем базу.
 	:: ------------------------------------------------------------------------------------------------
@@ -59,28 +74,30 @@ SET LOGFILE_=.\%~n0.log
 	:: ------------------------------------------------------------------------------------------------
 	echo.%time%: Make parameters...
 	@echo.%time%: Make parameters...>>%LOGFILE_%
-	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Create Scripts\Parameters.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_% 
+	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Create Scripts\Parameters.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
+	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Stored Procedures\System\GetBoolSystemUUID.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	:: Удаление файла.
-	del REGION_.sql >NUL 2>&1
+	set REGION=%temp_%UpdateRegion.sql
+	del %REGION% >NUL 2>&1
 	:: ------------------------------------------------------------------------------------------------
 	:: Скрипт на изменение региональных настроек.
 	:: ------------------------------------------------------------------------------------------------
-	echo DECLARE @parameterValue VARCHAR(MAX), @parameterName VARCHAR(MAX) >> REGION_.sql
-	echo SET @parameterValue = '%REGION_%' >> REGION_.sql
-	echo SET @parameterName = 'SystemUUID' >> REGION_.sql
-	echo IF NOT EXISTS (SELECT * FROM [Parametrs] WHERE Parametr_Name = @parameterName) >> REGION_.sql
-	echo BEGIN >> REGION_.sql
-	echo 	INSERT INTO [Parametrs] (Parametr_Name, Parametr_Value, Coments) >> REGION_.sql
-	echo 	VALUES (@parameterName, @parameterValue, 'Тип используемых региональных настроек'); >> REGION_.sql
-	echo END >> REGION_.sql
-	echo ELSE >> REGION_.sql
-	echo BEGIN >> REGION_.sql
-	echo 	UPDATE [Parametrs] >> REGION_.sql
-	echo 	SET Parametr_Value = @parameterValue >> REGION_.sql
-	echo 	WHERE Parametr_Name = @parameterName >> REGION_.sql
-	echo END >> REGION_.sql
+	echo DECLARE @parameterValue VARCHAR(MAX), @parameterName VARCHAR(MAX)>>%REGION%
+	echo SET @parameterValue = '%REGION_GUID%'>>%REGION%
+	echo SET @parameterName = 'SystemUUID'>>%REGION%
+	echo IF NOT EXISTS (SELECT * FROM [Parametrs] WHERE Parametr_Name = @parameterName)>>%REGION%
+	echo BEGIN>>%REGION%
+	echo 	INSERT INTO [Parametrs] (Parametr_Name, Parametr_Value, Coments)>>%REGION%
+	echo 	VALUES (@parameterName, @parameterValue, 'Тип используемых региональных настроек');>>%REGION%
+	echo END>>%REGION%
+	echo ELSE>>%REGION%
+	echo BEGIN>>%REGION%
+	echo 	UPDATE [Parametrs]>>%REGION%
+	echo 	SET Parametr_Value = @parameterValue>>%REGION%
+	echo 	WHERE Parametr_Name = @parameterName>>%REGION%
+	echo END>>%REGION%
 	:: Устанавливаем региональный признак.
-	call "%~dp0_update.bat" "" "%~dp0REGION_.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
+	call "%~dp0_update.bat" "" "%REGION%" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 :END_RECREATE
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем региональные обновления.
@@ -88,14 +105,14 @@ SET LOGFILE_=.\%~n0.log
 	echo.%time%: Update content...
 	@echo.%time%: Update content...>>%LOGFILE_%
 	:: Задаем каталоги.
-	set TRASH=trash.log
-	set TEMP=trash.tmp
+	set TRASH=%temp_%trash.log
+	set TEMP=%temp_%trash.tmp
 	:: Удаление файла.
 	del %TRASH% >NUL 2>&1
 	:: Скрипты обновления, в случае ошибки падают в <c>TRASH</c> для повтора выполнения со смещением последовательности на -1.
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем обновление.
-	:: ------------------------------------------------------------------------------------------------	
+	:: ------------------------------------------------------------------------------------------------
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Create Scripts\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Stored Procedures\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\Settings\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
@@ -185,7 +202,7 @@ SET LOGFILE_=.\%~n0.log
 	:: ------------------------------------------------------------------------------------------------
 	echo.
 	echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%
-	@echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS% >> %LOGFILE_%
+	@echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%>>%LOGFILE_%
 	REM pause
 	REM timeout /t 145
 GOTO :EOF

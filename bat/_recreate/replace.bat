@@ -6,6 +6,7 @@ set "FILENAME=%~2"
 set "SAVENAME=%~3"
 set "search=%~4"
 set "replace=%~5"
+SET replace=%replace:"=%
 REM Создаем копию файла
 copy /Y "%FILEPATH%%FILENAME%" "%FILEPATH%%SAVENAME%" > NUL
 REM Выполняем поиск и замену...

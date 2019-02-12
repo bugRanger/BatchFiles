@@ -49,6 +49,8 @@ SET DB_NAME=%2
 SET DB_USER=%3
 SET DB_PASS=%4
 SET DB_PATH=%5
+SET DB_PATH=%DB_PATH:"=%
+SET DB_PATH="%DB_PATH%"
 SET SILENT=%6
 SET LOGFILE=%7
 REM Color for rows
@@ -66,11 +68,18 @@ SET DIRMAKE=.\__recreate\
 SET DIRLOG=%~dp0
 SET DIRLOG=%DIRLOG%logs
 
-REM Указываем выполнение с задержкой, т.к. у нас есть подсчет в цикле итераций (иначе подсчет не будет корректно выполняться).
+:: Проверка на наличие параметра.
+IF [%1] EQU [] (
+	echo.Need to specify arguments
+	pause
+	GOTO :EOF
+)
+:: Проверка наличия директории для базы.
+IF [%DB_PATH%] EQU [""] GOTO :EOF
+
 SetLocal EnableDelayedExpansion
 	REM Значения по умолчанию
 	IF [%SILENT%] EQU [] set SILENT=1
-	IF [%DB_PATH%] EQU [] set DB_PATH=""
 	
 	REM Директория...
 	cd /d %~dp0
@@ -81,9 +90,9 @@ SetLocal EnableDelayedExpansion
 	REM IF NOT EXIST "%DB_PATH%%DB_NAME%*.mdf" (
 	REM IF NOT EXIST "%DB_PATH%" GOTO SkipRecreate)
 	REM Подготавливаем скрипты...
-	call %MAKEPATH%replace.bat %MAKEPATH% "detach.sql" "_detach.sql" "NAME_BASE" %DB_NAME%
-	call %MAKEPATH%replace.bat %MAKEPATH% "drop.sql" "_drop.sql" "NAME_BASE" %DB_NAME%
-	call %MAKEPATH%replace.bat %MAKEPATH% "make.sql" "__make.sql" "NAME_BASE" %DB_NAME%
+	call %MAKEPATH%replace.bat %MAKEPATH% "detach.sql" "_detach.sql" "NAME_BASE" "%DB_NAME%"
+	call %MAKEPATH%replace.bat %MAKEPATH% "drop.sql" "_drop.sql" "NAME_BASE" "%DB_NAME%"
+	call %MAKEPATH%replace.bat %MAKEPATH% "make.sql" "__make.sql" "NAME_BASE" "%DB_NAME%"
 	call %MAKEPATH%replace.bat %MAKEPATH% "__make.sql" "_make.sql" "PATH_BASE" %DB_PATH%
 	REM Подготавливаем скрипты для наполнения...
 	del "%MAKEPATH%__*.sql" >NUL 2>&1

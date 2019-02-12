@@ -33,6 +33,13 @@ SET Tooltip=%ESC%[90m
 
 SET DIRLOG=%~dp0logs
 
+:: Проверка на наличие параметра.
+IF [%1] EQU [] IF [%2] EQU [] (
+	echo.Need to specify arguments
+	pause
+	GOTO :EOF
+)
+
 :: Указываем выполнение с задержкой, т.к. у нас есть подсчет в цикле итераций (иначе подсчет не будет корректно выполняться).
 SetLocal EnableDelayedExpansion
 	:: Значения по умолчанию

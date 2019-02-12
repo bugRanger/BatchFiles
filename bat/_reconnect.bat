@@ -20,6 +20,13 @@ SET Green=%ESC%[92m
 SET Yellow=%ESC%[93m
 SET Tooltip=%ESC%[90m
 
+:: Проверка на наличие параметра.
+IF [%1] EQU [] (
+	echo.Need to specify arguments
+	pause
+	GOTO :EOF
+)
+
 SetLocal EnableDelayedExpansion
 	:Wait
 	timeout /t %TIMEOUT%
