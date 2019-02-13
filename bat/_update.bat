@@ -13,7 +13,11 @@
 
 :: Settings
 SET UPD_FOLDER=%1
+SET UPD_FOLDER=%UPD_FOLDER:"=%
+SET UPD_FOLDER="%UPD_FOLDER%"
 SET UPD_FILE=%2
+SET UPD_FILE=%UPD_FILE:"=%
+SET UPD_FILE="%UPD_FILE%"
 SET DB_PROVIDER=%3
 SET DB_NAME=%4
 SET DB_USER=%5
@@ -21,6 +25,8 @@ SET DB_PASS=%6
 SET ATTEMP=%7
 SET SILENT=%8
 SET LOGFILE=%9
+SET LOGFILE=%LOGFILE:"=%
+SET LOGFILE="%LOGFILE%"
 :: Color for rows
 SET ESC=
 SET RESC=%ESC%[0m
@@ -80,15 +86,15 @@ GOTO :EOF
 		:: Выводим результат выполнения.
 		IF [%SILENT%] LSS [2] IF !SUCCESS! NEQ !TOTAL! (
 			echo.%time%:[%1] %Red%Total number does not match the number of successful%RESC%
-			@echo.%time%:[%1] Total number does not match the number of successful>>%LOGFILE%
+			@echo.%time%:[%1] Total number does not match the number of successful >> %LOGFILE%
 		)
 		IF [%SILENT%] LSS [2] IF !SUCCESS! EQU !TOTAL! (
 			echo.%time%:[%1] %Green%Total number corresponds to the number of successful%RESC%
-			@echo.%time%:[%1] Total number corresponds to the number of successful>>%LOGFILE%
+			@echo.%time%:[%1] Total number corresponds to the number of successful >> %LOGFILE%
 		)
 		IF [%SILENT%] LSS [2] (
 			echo.%time%:[%1] %BCyan%Count - !SUCCESS!/!TOTAL!%RESC%
-			@echo.%time%:[%1] Count - !SUCCESS!/!TOTAL!>>%LOGFILE%
+			@echo.%time%:[%1] Count - !SUCCESS!/!TOTAL! >> %LOGFILE%
 		)
 	)
 GOTO :EOF
@@ -109,7 +115,7 @@ GOTO :EOF
 	:: Пишем в консоль и в лог.
 	IF [%SILENT%] EQU [0] (
 		echo.%time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT%
-		@echo.%time%:[%1] [QUERY] ^> %ACT%>>%LOG%
+		@echo.%time%:[%1] [QUERY] ^> %ACT% >> %LOG%
 	)
 	:: Выполняем скрипт...
 	sqlcmd -S %DB_PROVIDER% -d %DB_NAME% -U %DB_USER% -P %DB_PASS% -b -i %2 -r0 1> NUL 2>>%LOG%
@@ -117,12 +123,12 @@ GOTO :EOF
 	:: Проверка на ошибку...
 	IF !ERRORLEVEL! EQU 0 (
 		IF [%SILENT%] LSS [3] echo.%time%:[%1] [%Green%READY%RESC%] ^< %ACT%
-		@echo.%time%:[%1] [READY] ^< %ACT%>>%LOG%
+		@echo.%time%:[%1] [READY] ^< %ACT% >> %LOG%
 		set /A SUCCESS=!SUCCESS!+1
 	)
 	IF !ERRORLEVEL! NEQ 0 (
 		IF [%SILENT%] LSS [3] echo.%time%:[%1] [%Red%ERROR%RESC%] ^< %ACT%
-		@echo.%time%:[%1] [ERROR] ^< %ACT% ^(%2^)>>%LOG%
+		@echo.%time%:[%1] [ERROR] ^< %ACT% ^(%2^) >> %LOG%
 		:: Пишем заметку о файле с ошибкой в свалку.
 		IF [!TRASH!] NEQ [] (
 			@echo.%2 >> !TRASH!

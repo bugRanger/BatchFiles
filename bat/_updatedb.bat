@@ -1,17 +1,16 @@
 @echo off
-:: Example: call {This}.bat "{DB_PROVIDER_}" "{DB_NAME_}" "{DB_USER_}" "{DB_PASS_}" "{DB_PATH_}" {UPD_FOLDER_} {REGION_GUID} {ATTEMP_} {SILENT_}
+:: Example: call {This}.bat "{DB_PROVIDER_}" "{DB_NAME_}" "{DB_USER_}" "{DB_PASS_}" "{DB_PATH_}" {REGION_GUID} {UPD_FOLDER_} {ATTEMP_} {SILENT_}
 :: 1. {DB_PROVIDER_} - сервер (имя/адрес)
 :: 2. {DB_NAME_} - наименование базы данных.
 :: 3. {DB_USER_} - пользователь.
 :: 4. {DB_PASS_} - пароль пользователя.
-:: 5. {DB_PATH_} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Этот параметр используется для принудительного пересоздания базы данных.
-:: 6. {UPD_FOLDER_} - папка с файлами обновления.
-:: 7. {REGION_GUID} - guid используемого региона.
+:: 5. {REGION_GUID} - guid используемого региона.
+:: 6. {DB_PATH_} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Этот параметр используется для принудительного пересоздания базы данных.
+:: 7. {UPD_FOLDER_} - папка с файлами обновления.
 :: 8. {ATTEMP_} - повторы выполнения при наличие ошибок (1 по умолчанию)
 :: 9. {SILENT_} - тихий режим(0 - off, 1 - on. off по умолчанию).
-:: 10. {LOGFILE_} - файл для сбора результатов выполнения.
 :: Example>
-:: call {This}.bat "192.168.70.26" "Dev44_Atlan" "sa" "1234" "D:\Base" "C:\Update\" 3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73 1 1
+:: call {This}.bat "192.168.70.26" "Dev44_Atlan" "sa" "1234" "D:\Base" "3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73" "C:\Update\" 1 1
 
 :: Settings
 SET DB_PROVIDER_=%1
@@ -21,9 +20,10 @@ SET DB_PASS_=%4
 SET DB_PATH_=%5
 SET DB_PATH_=%DB_PATH_:"=%
 SET DB_PATH_="%DB_PATH_%"
-SET UPD_FOLDER_=%6
+SET REGION_GUID=%6
+SET REGION_GUID=%REGION_GUID:"=%
+SET UPD_FOLDER_=%7
 SET UPD_FOLDER_=%UPD_FOLDER_:"=%
-SET REGION_GUID=%7
 SET ATTEMP_=%8
 SET SILENT_=%9
 :: Если не был указан лог то выпадет ошибка.
@@ -56,7 +56,7 @@ IF [%1] EQU [] (
 	:: ------------------------------------------------------------------------------------------------
 	set STARTTIME=%time%
 	echo.%STARTTIME%: Start %~nx0
-	@echo.%STARTTIME%: Start %~nx0>>%LOGFILE_%
+	@echo.%STARTTIME%: Start %~nx0 >> %LOGFILE_%
 :: ----------------------------------------------------------------------------------------------------
 :: Воссоздание базы данных.
 :: ----------------------------------------------------------------------------------------------------
@@ -67,35 +67,37 @@ IF [%1] EQU [] (
 	:: Создаем базу.
 	:: ------------------------------------------------------------------------------------------------
 	echo.%time%: Create database...
-	@echo.%time%: Create database...>>%LOGFILE_%
+	@echo.%time%: Create database... >> %LOGFILE_%
 	call "%~dp0_recreate.bat" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %DB_PATH_% 0 %LOGFILE_%
 	:: ------------------------------------------------------------------------------------------------
 	:: Устанавливаем региональный признак.
 	:: ------------------------------------------------------------------------------------------------
 	echo.%time%: Make parameters...
-	@echo.%time%: Make parameters...>>%LOGFILE_%
+	@echo.%time%: Make parameters... >> %LOGFILE_%
 	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Create Scripts\Parameters.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Stored Procedures\System\GetBoolSystemUUID.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	:: Удаление файла.
 	set REGION=%temp_%UpdateRegion.sql
 	del %REGION% >NUL 2>&1
+	:: Проверка наличия.
+	IF [%REGION_GUID%] EQU [] GOTO :END_RECREATE
 	:: ------------------------------------------------------------------------------------------------
 	:: Скрипт на изменение региональных настроек.
 	:: ------------------------------------------------------------------------------------------------
-	echo DECLARE @parameterValue VARCHAR(MAX), @parameterName VARCHAR(MAX)>>%REGION%
-	echo SET @parameterValue = '%REGION_GUID%'>>%REGION%
-	echo SET @parameterName = 'SystemUUID'>>%REGION%
-	echo IF NOT EXISTS (SELECT * FROM [Parametrs] WHERE Parametr_Name = @parameterName)>>%REGION%
-	echo BEGIN>>%REGION%
-	echo 	INSERT INTO [Parametrs] (Parametr_Name, Parametr_Value, Coments)>>%REGION%
-	echo 	VALUES (@parameterName, @parameterValue, 'Тип используемых региональных настроек');>>%REGION%
-	echo END>>%REGION%
-	echo ELSE>>%REGION%
-	echo BEGIN>>%REGION%
-	echo 	UPDATE [Parametrs]>>%REGION%
-	echo 	SET Parametr_Value = @parameterValue>>%REGION%
-	echo 	WHERE Parametr_Name = @parameterName>>%REGION%
-	echo END>>%REGION%
+	echo DECLARE @parameterValue VARCHAR(MAX), @parameterName VARCHAR(MAX) >> %REGION%
+	echo SET @parameterValue = '%REGION_GUID%' >> %REGION%
+	echo SET @parameterName = 'SystemUUID' >> %REGION%
+	echo IF NOT EXISTS (SELECT * FROM [Parametrs] WHERE Parametr_Name = @parameterName) >> %REGION%
+	echo BEGIN >> %REGION%
+	echo 	INSERT INTO [Parametrs] (Parametr_Name, Parametr_Value, Coments) >> %REGION%
+	echo 	VALUES (@parameterName, @parameterValue, 'Тип используемых региональных настроек'); >> %REGION%
+	echo END >> %REGION%
+	echo ELSE >> %REGION%
+	echo BEGIN >> %REGION%
+	echo 	UPDATE [Parametrs] >> %REGION%
+	echo 	SET Parametr_Value = @parameterValue >> %REGION%
+	echo 	WHERE Parametr_Name = @parameterName >> %REGION%
+	echo END >> %REGION%
 	:: Устанавливаем региональный признак.
 	call "%~dp0_update.bat" "" "%REGION%" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 :END_RECREATE
@@ -103,7 +105,7 @@ IF [%1] EQU [] (
 	:: Выполняем региональные обновления.
 	:: ------------------------------------------------------------------------------------------------
 	echo.%time%: Update content...
-	@echo.%time%: Update content...>>%LOGFILE_%
+	@echo.%time%: Update content... >> %LOGFILE_%
 	:: Задаем каталоги.
 	set TRASH=%temp_%trash.log
 	set TEMP=%temp_%trash.tmp
@@ -140,7 +142,7 @@ IF [%1] EQU [] (
 	:: ------------------------------------------------------------------------------------------------
 	for /F "tokens=2 delims=:" %%A in ('find /c /v "" %TEMP%') do set /a count=%%A
 	echo.%time%:[%count%] Conflict resolution...
-	@echo.%time%:[%count%] Conflict resolution...>>%LOGFILE_%
+	@echo.%time%:[%count%] Conflict resolution... >> %LOGFILE_%
 	:: Проходим в обратном направление.
 	SetLocal EnableExtensions DisableDelayedExpansion
 	for /f "tokens=1,* delims=¬" %%a in ('
@@ -160,7 +162,7 @@ IF [%1] EQU [] (
 	:: Получаем текущее время.
 	set ENDTIME=%time%
 	echo.%ENDTIME%: Stop %~nx0
-	@echo.%ENDTIME%: Stop %~nx0>>%LOGFILE_%
+	@echo.%ENDTIME%: Stop %~nx0 >> %LOGFILE_%
 	:: Переводим время в миллисекунды.
 	
 	set /A STARTTIME=(%STARTTIME:~0,2%-100)*360000 + (%STARTTIME:~3,2%-100)*6000 + (%STARTTIME:~6,2%-100)*100 + (%STARTTIME:~9,2%-100)
@@ -189,20 +191,20 @@ IF [%1] EQU [] (
 	:: ------------------------------------------------------------------------------------------------
 	IF %READY% NEQ %AMOUNT% (
 		echo.%time%: %Red%Total number does not match the number of successful%RESC%
-		@echo.%time%: Total number does not match the number of successful>>%LOGFILE_%
+		@echo.%time%: Total number does not match the number of successful >> %LOGFILE_%
 	)
 	IF %READY% EQU %AMOUNT% (
 		echo.%time%: %Green%Total number corresponds to the number of successful%RESC%
-		@echo.%time%: Total number corresponds to the number of successful>>%LOGFILE_%
+		@echo.%time%: Total number corresponds to the number of successful >> %LOGFILE_%
 	)
 	echo.%time%: %BCyan%Total count - %READY%/%AMOUNT%%RESC%
-	@echo.%time%: Total count - %READY%/%AMOUNT%>>%LOGFILE_%
+	@echo.%time%: Total count - %READY%/%AMOUNT% >> %LOGFILE_%
 	:: ------------------------------------------------------------------------------------------------
 	:: Время выполнения.
 	:: ------------------------------------------------------------------------------------------------
 	echo.
 	echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%
-	@echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS%>>%LOGFILE_%
+	@echo.Total runtime - %DURATIONH%:%DURATIONM%:%DURATIONS%,%DURATIONHS% >> %LOGFILE_%
 	REM pause
 	REM timeout /t 145
 GOTO :EOF
