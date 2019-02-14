@@ -10,7 +10,7 @@
 :: 8. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
 :: 9. {LogFile} - файл для сбора результатов выполнения.
 :: Example>call _update.bat "C:\Temp" "*.sql" "192.168.70.26" "Dev44_Atlan" "sa" "testSA" 0 1
-
+:: TODO> Необходимо обернуть параметры в ковычки иначе они выпадают при передаче.
 :: Settings
 SET UPD_FOLDER=%1
 SET UPD_FOLDER=%UPD_FOLDER:"=%

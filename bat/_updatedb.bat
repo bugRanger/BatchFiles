@@ -4,14 +4,14 @@
 :: 2. {DB_NAME_} - наименование базы данных.
 :: 3. {DB_USER_} - пользователь.
 :: 4. {DB_PASS_} - пароль пользователя.
-:: 5. {REGION_GUID} - guid используемого региона.
-:: 6. {DB_PATH_} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Этот параметр используется для принудительного пересоздания базы данных.
+:: 5. {DB_PATH_} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Этот параметр используется для принудительного пересоздания базы данных.
+:: 6. {REGION_GUID} - guid используемого региона.
 :: 7. {UPD_FOLDER_} - папка с файлами обновления.
 :: 8. {ATTEMP_} - повторы выполнения при наличие ошибок (1 по умолчанию)
 :: 9. {SILENT_} - тихий режим(0 - off, 1 - on. off по умолчанию).
 :: Example>
 :: call {This}.bat "192.168.70.26" "Dev44_Atlan" "sa" "1234" "D:\Base" "3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73" "C:\Update\" 1 1
-
+:: TODO> Необходимо обернуть параметры в ковычки иначе они выпадают при передаче.
 :: Settings
 SET DB_PROVIDER_=%1
 SET DB_NAME_=%2
@@ -76,11 +76,12 @@ IF [%1] EQU [] (
 	@echo.%time%: Make parameters... >> %LOGFILE_%
 	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Create Scripts\Parameters.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "" "%UPD_FOLDER_%Stored Procedures\System\GetBoolSystemUUID.sql" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
+:END_RECREATE
+	:: Проверка наличия.
+	IF [%REGION_GUID%] EQU [] GOTO :END_REGION
 	:: Удаление файла.
 	set REGION=%temp_%UpdateRegion.sql
 	del %REGION% >NUL 2>&1
-	:: Проверка наличия.
-	IF [%REGION_GUID%] EQU [] GOTO :END_RECREATE
 	:: ------------------------------------------------------------------------------------------------
 	:: Скрипт на изменение региональных настроек.
 	:: ------------------------------------------------------------------------------------------------
@@ -100,7 +101,7 @@ IF [%1] EQU [] (
 	echo END >> %REGION%
 	:: Устанавливаем региональный признак.
 	call "%~dp0_update.bat" "" "%REGION%" "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
-:END_RECREATE
+:END_REGION
 	:: ------------------------------------------------------------------------------------------------
 	:: Выполняем региональные обновления.
 	:: ------------------------------------------------------------------------------------------------
@@ -121,6 +122,7 @@ IF [%1] EQU [] (
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\Permissions\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\Parameters\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\WebDocJournal\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
+	call "%~dp0_update.bat" "%UPD_FOLDER_%Views\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	:: ------------------------------------------------------------------------------------------------
 	:: Сохранение результатов выполнение, до повторов.
 	:: ------------------------------------------------------------------------------------------------

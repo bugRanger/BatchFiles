@@ -13,11 +13,15 @@ REM svn diff --summarize -r 17553:17500 http://192.168.70.51/AIS/dev.v3/SIMADATA
 :: Поднимаемся на уровень выше.
 :: ----------------------------------------------------------------------------------------------------
 cd..
+REM SET PROVIDER_=(localdb)\MSSQLLocalDB
+REM SET BASE_=Example
+REM SET USER_=""
+REM SET PASS_=""
 :: Settings
-SET PROVIDER_=STUDENTPC\SQLEXPRESS
-SET BASE_=AltaiKrai
+SET PROVIDER_=192.168.70.26
+SET BASE_=Dev223_AltaiKrai
 SET USER_=sa
-SET PASS_=1234
+SET PASS_=testSA
 SET "URL=http://192.168.70.51/AIS/dev.v3/SIMADATABASE"
 SET ATTEMP=0
 SET SILENT=1
@@ -39,12 +43,16 @@ SET REVISION_FILE_="%~dp0%~n0.grev"
 
 SET DIRLOG=%~dp0logs
 SET LOGFILE_=%~dp0%~n0.log
-
+SET LOGFILE_=%LOGFILE_:"=%
+SET LOGFILE_="%LOGFILE_%"
 
 :: ----------------------------------------------------------------------------------------------------
 :: Проверка наличия.
 :: ----------------------------------------------------------------------------------------------------
-IF ["%URL%"] EQU [""] echo.%time%: You must specify URL & pause & goto :EOF
+IF ["%URL%"] EQU [""] (
+	@echo.%time%: You must specify URL >> %LOGFILE_%
+	echo.%time%: You must specify URL & pause & goto :EOF
+)
 
 	:: Обнуление результатов.
 	set READY=0
@@ -57,18 +65,24 @@ IF ["%URL%"] EQU [""] echo.%time%: You must specify URL & pause & goto :EOF
 	SET LAST_REVISION=0
 	IF EXIST %REVISION_FILE_% set /p LAST_REVISION= <%REVISION_FILE_%
 	echo.%time%: Last revision version - %LAST_REVISION%
+	@echo.%time%: Last revision version - %LAST_REVISION% >> %LOGFILE_%
 	:: ------------------------------------------------------------------------------------------------
 	:: Получить текущую версию.
 	:: ------------------------------------------------------------------------------------------------
 	SET CURR_REVISION=0
 	for /f %%i in ('svn info --show-item=revision %URL%') do set /a CURR_REVISION=%%i
 	echo.%time%: Current revision version - %CURR_REVISION%
+	@echo.%time%: Current revision version - %CURR_REVISION% >> %LOGFILE_%
 :: ----------------------------------------------------------------------------------------------------
 :: Проверка наличия.
 :: ----------------------------------------------------------------------------------------------------
-IF ["%LAST_REVISION%"] EQU ["%CURR_REVISION%"] echo.%time%: No revisions available & pause & goto :EOF
+IF ["%LAST_REVISION%"] EQU ["%CURR_REVISION%"] (
+	@echo.%time%: No revisions available >> %LOGFILE_%
+	echo.%time%: No revisions available & pause & goto :EOF
+)
 
 	echo.%time%: Getting files from revision...
+	@echo.%time%: Getting files from revision... >> %LOGFILE_%
 	:: Создаем каталог для ревизии.
 	IF NOT EXIST %REVISION_DIR_% mkdir %REVISION_DIR_%
 	:: Параметры для получения файлов, по типу изменения и расширения.
@@ -111,11 +125,15 @@ IF ["%LAST_REVISION%"] EQU ["%CURR_REVISION%"] echo.%time%: No revisions availab
 	)
 
 	:: Вызываем обновление.
-	IF ERRORLEVEL 0 IF %READY% EQU %AMOUNT% call _updatedb.bat %PROVIDER_% %BASE_% %USER_% %PASS_% "" "" %REVISION_DIR_% 0 1
+	echo.%time%: Execute scripts...
+	@echo.%time%: Execute scripts... >> %LOGFILE_%
+	call _updatedb.bat %PROVIDER_% %BASE_% %USER_% %PASS_% "" "" %REVISION_DIR_% 2 2
 	:: Проверка результата.
-	IF ERRORLEVEL 0 IF %READY% EQU %AMOUNT% echo.%CURR_REVISION%>%REVISION_FILE_%
+	IF %READY% EQU %AMOUNT% echo.%CURR_REVISION%>%REVISION_FILE_%
 
-pause
+	pause
+	REM timeout /t 145
+
 GOTO :EOF
 :RunScript
 
@@ -129,8 +147,8 @@ GOTO :EOF
 	set ACT=%ACT:(=^^(%
 	set ACT=%ACT:)=^^)%
 	:: Проверяем наличие общего лога.
-	IF [%LOGFILE%] EQU [] set LOG="%DIRLOG%\%TM%_%~n2.log"
-	IF [%LOGFILE%] NEQ [] set LOG=%LOGFILE%
+	IF [%LOGFILE_%] EQU [] set LOG="%DIRLOG%\%TM%_%~n2.log"
+	IF [%LOGFILE_%] NEQ [] set LOG=%LOGFILE_%
 	:: Пишем в консоль и в лог.
 	IF [%SILENT%] EQU [0] (
 		echo.%time%:[%1] [%Yellow%QUERY%RESC%] ^> %ACT%

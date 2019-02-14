@@ -8,7 +8,7 @@ REM 5. {DB_PATH} - путь до место хранения базы, как файла локально. ВНИМАНИЕ! Эт
 REM 6. {Silent} - тихий режим(0 - off, 1 - on. off по умолчанию).
 REM 7. {LogFile} - файл для сбора результатов выполнения.
 REM Example>call _recreate.bat "192.168.70.26" "Dev44_Atlan" "sa" "testSA" "C:\Temp" 1 ".\result.log"
-
+:: TODO> Необходимо обернуть параметры в ковычки иначе они выпадают при передаче.
 REM +   Add                set /a "_num=_num+5"
 REM +=  Add variable       set /a "_num+=5"
 REM -   Subtract (or unary)set /a "_num=_num-5"
@@ -76,6 +76,11 @@ IF [%1] EQU [] (
 )
 :: Проверка наличия директории для базы.
 IF [%DB_PATH%] EQU [""] GOTO :EOF
+:: Задаем вопрос.
+CHOICE /C YN /N /T 15 /D Y /M "%time%: %Yellow%Drop and create database?%RESC% [Enter:%Green%Y/N%RESC%]"
+:: Если необходимо пропустить шаг.
+REM IF ERRORLEVEL 1 
+IF ERRORLEVEL 2 GOTO :EOF
 
 SetLocal EnableDelayedExpansion
 	REM Значения по умолчанию

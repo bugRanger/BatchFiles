@@ -1,9 +1,24 @@
 @echo off
 :: Поднимаемся на уровень выше.
 cd..
-:: Запускаем.
-REM cd %Checkout%
-REM svn checkout -r 1234 url://repository/path
-REM
-call _updatedb.bat (localdb)\MSSQLLocalDB Example "" "" "" "D:\Projects\Project.SIM\SIMADATABASE\" 3BDFDCFF-63DA-4010-9CAF-3F46CCBBBF73 0 1
+:: Settings
+REM SET PROVIDER_=192.168.70.26
+REM SET BASE_=Dev223_AltaiKrai
+REM SET USER_=sa
+REM SET PASS_=testSA
+REM SET PATH_=
+REM SET REGION_=B3F18C38-13AB-4497-B5B2-91123E525011
+SET PROVIDER_=STUDENTPC\MSSQLSERVER14
+SET BASE_=AltaiKrai_223
+SET USER_=sa
+SET PASS_=1234
+SET PATH_=D:\bases\2005\
+SET REGION_=B3F18C38-13AB-4497-B5B2-91123E525011
+SET UPDATE_=D:\Projects\Project.SIM\SIMADATABASE\
+
+SET LOGFILE_=%~dp0%~n0.log
+SET LOGFILE_=%LOGFILE_:"=%
+SET LOGFILE_="%LOGFILE_%"
+
+call _updatedb.bat %PROVIDER_% %BASE_% %USER_% %PASS_% %PATH_% %REGION_% %UPDATE_% 0 2
 pause
