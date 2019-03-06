@@ -50,13 +50,15 @@ IF [%1] EQU [] (
 	IF [%ATTEMP_%] NEQ [] set /a ATTEMP_=%ATTEMP_%+1
 	IF [%LOGFILE_%] EQU [""] set LOGFILE_=.\%~n0.log
 	:: Удаление файла.
-	del %LOGFILE_% >NUL 2>&1
+	REM del %LOGFILE_% >NUL 2>&1
 	:: ------------------------------------------------------------------------------------------------
 	:: Время запуска.
 	:: ------------------------------------------------------------------------------------------------
 	set STARTTIME=%time%
-	echo.%STARTTIME%: Start %~nx0
-	@echo.%STARTTIME%: Start %~nx0 >> %LOGFILE_%
+	IF [%SILENT%] EQU [0] (
+		echo.%STARTTIME%: Start %~nx0
+		@echo.%STARTTIME%: Start %~nx0 >> %LOGFILE_%
+	)
 :: ----------------------------------------------------------------------------------------------------
 :: Воссоздание базы данных.
 :: ----------------------------------------------------------------------------------------------------
@@ -122,6 +124,7 @@ IF [%1] EQU [] (
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\Permissions\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\Parameters\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\WebDocJournal\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
+	call "%~dp0_update.bat" "%UPD_FOLDER_%Queries\FillingOfDirectories\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	call "%~dp0_update.bat" "%UPD_FOLDER_%Views\" *.sql "%DB_PROVIDER_%" %DB_NAME_% %DB_USER_% %DB_PASS_% %ATTEMP_% %SILENT_% %LOGFILE_%
 	:: ------------------------------------------------------------------------------------------------
 	:: Сохранение результатов выполнение, до повторов.
@@ -163,8 +166,10 @@ IF [%1] EQU [] (
 	:: ------------------------------------------------------------------------------------------------
 	:: Получаем текущее время.
 	set ENDTIME=%time%
-	echo.%ENDTIME%: Stop %~nx0
-	@echo.%ENDTIME%: Stop %~nx0 >> %LOGFILE_%
+	IF [%SILENT%] EQU [0] (
+		echo.%ENDTIME%: Stop %~nx0
+		@echo.%ENDTIME%: Stop %~nx0 >> %LOGFILE_%
+	)
 	:: Переводим время в миллисекунды.
 	
 	set /A STARTTIME=(%STARTTIME:~0,2%-100)*360000 + (%STARTTIME:~3,2%-100)*6000 + (%STARTTIME:~6,2%-100)*100 + (%STARTTIME:~9,2%-100)

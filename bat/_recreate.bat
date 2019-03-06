@@ -77,7 +77,7 @@ IF [%1] EQU [] (
 :: Проверка наличия директории для базы.
 IF [%DB_PATH%] EQU [""] GOTO :EOF
 :: Задаем вопрос.
-CHOICE /C YN /N /T 15 /D Y /M "%time%: %Yellow%Drop and create database?%RESC% [Enter:%Green%Y/N%RESC%]"
+CHOICE /C YN /N /T 15 /D Y /M "%time%: %Yellow%Drop and create database?%RESC% [Enter:%BCyan%Y%RESC%/N]"
 :: Если необходимо пропустить шаг.
 REM IF ERRORLEVEL 1 
 IF ERRORLEVEL 2 GOTO :EOF
