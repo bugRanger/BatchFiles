@@ -59,6 +59,10 @@ IF [%1] EQU [] (
 		echo.%STARTTIME%: Start %~nx0
 		@echo.%STARTTIME%: Start %~nx0 >> %LOGFILE_%
 	)
+	echo.%STARTTIME%: %Cyan%Update the %BCyan%%DB_NAME_%%BWhite%[%DB_PROVIDER_%]%RESC%
+	echo.%STARTTIME%: %Cyan%Using data from %BCyan%%URL%%RESC%
+	@echo.%STARTTIME%: Update the %DB_NAME_%[%DB_PROVIDER_%] >> %LOGFILE_%
+	@echo.%STARTTIME%: Using data from %URL% >> %LOGFILE_%
 :: ----------------------------------------------------------------------------------------------------
 :: Воссоздание базы данных.
 :: ----------------------------------------------------------------------------------------------------
@@ -109,6 +113,11 @@ IF [%1] EQU [] (
 	:: ------------------------------------------------------------------------------------------------
 	echo.%time%: Update content...
 	@echo.%time%: Update content... >> %LOGFILE_%
+	IF NOT EXIST "%UPD_FOLDER_%" (
+		echo.%time%: %RED%Not exists folder for update content%RESC% - '%UPD_FOLDER_%'.
+		@echo.%time%: Not exists folder for update content - '%UPD_FOLDER_%'. >> %LOGFILE_%
+		GOTO :END_TRASH
+	)
 	:: Задаем каталоги.
 	set TRASH=%temp_%trash.log
 	set TEMP=%temp_%trash.tmp
